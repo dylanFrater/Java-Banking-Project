@@ -10,46 +10,47 @@ import javafx.stage.Stage;
 
 public class MainUI extends Application {
 
+    private Stage primaryStage;
+
     @Override
     public void start(Stage stage) {
+        primaryStage = stage;
+        showLoginScreen();
+    }
 
-        Label title = new Label("Banking App Login");
-        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
-
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
-        usernameField.setMaxWidth(250);
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(250);
-
-        Button loginButton = new Button("Login");
-        loginButton.setMaxWidth(250);
-
-        Label message = new Label();
-
-        loginButton.setOnAction(e -> {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
-
-            if (username.equals("admin") && password.equals("1234")) {
-                message.setText("Login successful!");
-            } else {
-                message.setText("Invalid username or password.");
-            }
-        });
-
-        VBox layout = new VBox(15);
-        layout.getChildren().addAll(title, usernameField, passwordField, loginButton, message);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(30));
+    private void showLoginScreen() {
+        VBox layout = LoginView.create(this::showDashboardScreen);
 
         Scene scene = new Scene(layout, 500, 400);
 
-        stage.setTitle("Banking App");
-        stage.setScene(scene);
-        stage.show();
+        primaryStage.setTitle("Banking App");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void showDashboardScreen() {
+        VBox layout = DashboardView.create(
+                this::showTransactionsScreen,
+                this::showTransferScreen,
+                this::showLoginScreen
+        );
+
+        Scene scene = new Scene(layout, 650, 500);
+        primaryStage.setScene(scene);
+    }
+
+    private void showTransactionsScreen() {
+        VBox layout = TransactionsView.create(this::showDashboardScreen);
+
+        Scene scene = new Scene(layout, 650, 500);
+        primaryStage.setScene(scene);
+    }
+
+    private void showTransferScreen() {
+        VBox layout = TransferView.create(this::showDashboardScreen);
+
+        Scene scene = new Scene(layout, 650, 500);
+        primaryStage.setScene(scene);
     }
 
     public static void main(String[] args) {
