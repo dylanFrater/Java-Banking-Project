@@ -1,0 +1,25 @@
+# Banking App
+
+A mock banking application built to learn Spring Boot, MySQL, and Java application architecture.
+
+## Features
+- User account creation
+- Login system
+- Random card number, CVC, and expiration generation
+- MySQL database storage
+
+## Tech Stack
+- Java
+- Spring Boot
+- Maven
+- MySQL
+
+## Project Structure
+- `model` for data classes
+- `service` for business logic
+- `config` for configuration
+- `util` for helper methods
+- `repository` for database access
+
+## Current Goal
+Build account creation and database connection first.
