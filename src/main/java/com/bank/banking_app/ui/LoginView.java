@@ -10,6 +10,41 @@ import javafx.scene.layout.VBox;
 
 public class LoginView {
 
+
+
+    /*
+
+    don't use hardcoded users and passwords.
+    TODO: UPDATE DASHBOARD WHEN TRANSFERING MONEY THROUGH ACCOUNTS
+
+    TODO: ACCURATELY SHOW TRANSACTION HISTORY
+
+    TODO: USERNAMES SHOULD BE CASE-INSENSITIVE, PASSWORDS CASE-SENSITIVE
+
+    ✅TODO: Make it a dynamic window size saving the users previous window size when switching scenes not hardcoded
+
+    TODO: Change dropdown menu color and background text color for increased contrast
+
+    TODO: Make a darkmode toggle
+
+    TODO: Make logic?
+
+
+
+     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     public static VBox create(Runnable onSuccess) {
         Label title = new Label("Banking App Login");
         title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
