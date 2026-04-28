@@ -1,5 +1,6 @@
 package com.bank.banking_app.ui;
 
+import com.bank.banking_app.service.UserService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -8,9 +9,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
+import java.math.BigDecimal;
+
 public class TransferView {
 
-    public static VBox create(Runnable onBack) {
+    public static VBox create(String username, Runnable onBack) {
         Label title = new Label("Transfer Money");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
@@ -36,14 +39,33 @@ public class TransferView {
         submitButton.setOnAction(e -> {
             String fromAccount = fromAccountBox.getValue();
             String toAccount = toAccountBox.getValue();
-            String amount = amountField.getText();
+            String amountText = amountField.getText();
 
-            if (fromAccount == null || toAccount == null || amount.isBlank()) {
+            if (fromAccount == null || toAccount == null || amountText.isBlank()) {
                 messageLabel.setText("Please fill in all fields.");
-            } else if (fromAccount.equals(toAccount)) {
+                return;
+            }
+
+            if (fromAccount.equals(toAccount)) {
                 messageLabel.setText("Accounts must be different.");
-            } else {
-                messageLabel.setText("Transfer submitted successfully.");
+                return;
+            }
+
+            try {
+                BigDecimal amount = new BigDecimal(amountText);
+
+                UserService userService = new UserService();
+                boolean success = userService.transfer(username, fromAccount, toAccount, amount);
+
+                if (success) {
+                    messageLabel.setText("Transfer completed successfully.");
+                    amountField.clear();
+                } else {
+                    messageLabel.setText("Transfer failed. Check balance or amount.");
+                }
+
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Please enter a valid number.");
             }
         });
 
@@ -61,6 +83,7 @@ public class TransferView {
                 messageLabel,
                 backButton
         );
+
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(30));
 

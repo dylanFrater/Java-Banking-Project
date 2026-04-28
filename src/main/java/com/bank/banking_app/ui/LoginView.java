@@ -1,51 +1,17 @@
 package com.bank.banking_app.ui;
 
+import com.bank.banking_app.service.UserService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+
+import java.util.function.Consumer;
 
 public class LoginView {
 
+    public static VBox create(Consumer<String> onSuccess, Runnable onSignup) {
 
-
-    /*
-
-    don't use hardcoded users and passwords.
-    TODO: UPDATE DASHBOARD WHEN TRANSFERING MONEY THROUGH ACCOUNTS
-
-    TODO: ACCURATELY SHOW TRANSACTION HISTORY
-
-    TODO: USERNAMES SHOULD BE CASE-INSENSITIVE, PASSWORDS CASE-SENSITIVE
-
-    ✅TODO: Make it a dynamic window size saving the users previous window size when switching scenes not hardcoded
-
-    TODO: Change dropdown menu color and background text color for increased contrast
-
-    TODO: Make a darkmode toggle
-
-    TODO: Make logic?
-
-
-
-     */
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public static VBox create(Runnable onSuccess) {
         Label title = new Label("Banking App Login");
         title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
 
@@ -60,21 +26,28 @@ public class LoginView {
         Button loginButton = new Button("Login");
         loginButton.setMaxWidth(250);
 
+        Button signupButton = new Button("Create Account");
+        signupButton.setMaxWidth(250);
+
         Label message = new Label();
 
         loginButton.setOnAction(e -> {
             String username = usernameField.getText();
             String password = passwordField.getText();
 
-            if (username.equals("admin") && password.equals("1234")) {
-                onSuccess.run();
+            UserService userService = new UserService();
+
+            if (userService.loginUser(username, password)) {
+                onSuccess.accept(username);
             } else {
                 message.setText("Invalid username or password.");
             }
         });
 
+        signupButton.setOnAction(e -> onSignup.run());
+
         VBox layout = new VBox(15);
-        layout.getChildren().addAll(title, usernameField, passwordField, loginButton, message);
+        layout.getChildren().addAll(title, usernameField, passwordField, loginButton, signupButton, message);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(30));
 

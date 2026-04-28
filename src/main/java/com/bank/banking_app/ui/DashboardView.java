@@ -8,40 +8,39 @@ import javafx.scene.layout.VBox;
 
 public class DashboardView {
 
-    public static VBox create(Runnable onTransactions, Runnable onTransfer, Runnable onLogout) {
+    public static VBox create(String checkingAmount, String savingsAmount,
+                              Runnable onTransactions, Runnable onTransfer, Runnable onLogout) {
+
         Label welcomeLabel = new Label("Welcome to Your Banking Dashboard");
         welcomeLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
         Label checkingTitle = new Label("Checking Account");
         checkingTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        Label checkingBalance = new Label("Balance: $525.00");
+        Label checkingBalance = new Label("Balance: $" + checkingAmount);
 
         VBox checkingBox = new VBox(8);
         checkingBox.getChildren().addAll(checkingTitle, checkingBalance);
         checkingBox.setAlignment(Pos.CENTER);
         checkingBox.setPadding(new Insets(20));
-        checkingBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 8;");
+        checkingBox.setStyle("-fx-border-color: lightgray;");
 
         Label savingsTitle = new Label("Savings Account");
         savingsTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        Label savingsBalance = new Label("Balance: $1525.00");
+        Label savingsBalance = new Label("Balance: $" + savingsAmount);
 
         VBox savingsBox = new VBox(8);
         savingsBox.getChildren().addAll(savingsTitle, savingsBalance);
         savingsBox.setAlignment(Pos.CENTER);
         savingsBox.setPadding(new Insets(20));
-        savingsBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 8;");
+        savingsBox.setStyle("-fx-border-color: lightgray;");
 
         Button transactionsButton = new Button("View Transactions");
-        transactionsButton.setPrefWidth(180);
         transactionsButton.setOnAction(e -> onTransactions.run());
 
         Button transferButton = new Button("Transfer Money");
-        transferButton.setPrefWidth(180);
         transferButton.setOnAction(e -> onTransfer.run());
 
         Button logoutButton = new Button("Logout");
-        logoutButton.setPrefWidth(180);
         logoutButton.setOnAction(e -> onLogout.run());
 
         VBox layout = new VBox(20);
