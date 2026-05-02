@@ -9,7 +9,6 @@ import java.util.*;
 
 public class UserService {
 
-    // ================= CREATE USER =================
     public boolean registerUser(String fullName, String username, String password) {
         String sql = "INSERT INTO users " +
                 "(username, password_hash, pin_hash, card_number, full_name, cvc, expiration_date, routing_number, savings_balance, checking_balance) " +
@@ -38,9 +37,8 @@ public class UserService {
         }
     }
 
-    // ================= LOGIN =================
     public boolean loginUser(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ?";
+        String sql = "SELECT * FROM users WHERE username=? AND password_hash=?";
 
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -57,7 +55,6 @@ public class UserService {
         }
     }
 
-    // ================= GET BALANCES =================
     public Map<String, String> getBalances(String username) {
         Map<String, String> balances = new HashMap<>();
 
@@ -81,7 +78,6 @@ public class UserService {
         return balances;
     }
 
-    // ================= GET FULL NAME =================
     public String getFullName(String username) {
         String sql = "SELECT full_name FROM users WHERE username=?";
 
@@ -102,21 +98,14 @@ public class UserService {
         return "";
     }
 
-    // ================= SEND MONEY =================
     public boolean sendMoney(String sender, String receiver, BigDecimal amount) {
         if (sender.equals(receiver) || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
-
         if (!userExists(receiver)) return false;
 
         try (Connection conn = databaseConnection.getConnection()) {
 
-            BigDecimal senderBalance = getBalance(conn, sender, "checking_balance");
-
-            if (senderBalance.compareTo(amount) < 0) {
-                addTransaction(sender, "Send Failed", "Checking", null, amount,
-                        "Failed to send to " + receiver + " due to insufficient funds");
-                return false;
-            }
+            BigDecimal balance = getBalance(conn, sender, "checking_balance");
+            if (balance.compareTo(amount) < 0) return false;
 
             updateBalance(conn, sender, "checking_balance", amount.negate());
             updateBalance(conn, receiver, "checking_balance", amount);
@@ -132,10 +121,8 @@ public class UserService {
         }
     }
 
-    // ================= REQUEST MONEY =================
     public boolean requestMoney(String requester, String receiver, BigDecimal amount) {
         if (requester.equals(receiver) || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
-
         if (!userExists(receiver)) return false;
 
         String sql = "INSERT INTO requests (requester_username, receiver_username, amount, status) VALUES (?, ?, ?, 'PENDING')";
@@ -148,10 +135,8 @@ public class UserService {
             stmt.setBigDecimal(3, amount);
             stmt.executeUpdate();
 
-            addTransaction(requester, "Money Requested", null, null, amount,
-                    "Requested money from " + receiver);
-            addTransaction(receiver, "Request Received", null, null, amount,
-                    requester + " requested money from you");
+            addTransaction(requester, "Money Requested", null, null, amount, "Requested from " + receiver);
+            addTransaction(receiver, "Request Received", null, null, amount, requester + " requested money from you");
 
             return true;
 
@@ -161,38 +146,6 @@ public class UserService {
         }
     }
 
-    // ================= INTERNAL TRANSFER =================
-    public boolean transferBetweenAccounts(String username, String from, String to, BigDecimal amount) {
-        if (from == null || to == null || amount == null) return false;
-        if (from.equals(to) || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
-
-        String fromCol = from.equals("Checking") ? "checking_balance" : "savings_balance";
-        String toCol = to.equals("Checking") ? "checking_balance" : "savings_balance";
-
-        try (Connection conn = databaseConnection.getConnection()) {
-
-            BigDecimal balance = getBalance(conn, username, fromCol);
-            if (balance.compareTo(amount) < 0) {
-                addTransaction(username, "Internal Transfer Failed", from, to, amount,
-                        "Failed internal transfer due to insufficient funds");
-                return false;
-            }
-
-            updateBalance(conn, username, fromCol, amount.negate());
-            updateBalance(conn, username, toCol, amount);
-
-            addTransaction(username, "Internal Transfer", from, to, amount,
-                    "Moved from " + from + " to " + to);
-
-            return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // ================= ACCEPT REQUEST =================
     public boolean acceptRequest(int id) {
         try (Connection conn = databaseConnection.getConnection()) {
 
@@ -207,17 +160,15 @@ public class UserService {
             String receiver = rs.getString("receiver_username");
             BigDecimal amount = rs.getBigDecimal("amount");
 
-            boolean sent = sendMoney(receiver, requester, amount);
-            if (!sent) return false;
+            boolean success = sendMoney(receiver, requester, amount);
+            if (!success) return false;
 
             PreparedStatement update = conn.prepareStatement("UPDATE requests SET status='ACCEPTED' WHERE id=?");
             update.setInt(1, id);
             update.executeUpdate();
 
-            addTransaction(requester, "Request Accepted", null, "Checking", amount,
-                    receiver + " accepted your money request");
-            addTransaction(receiver, "Accepted Request", "Checking", null, amount,
-                    "You accepted money request from " + requester);
+            addTransaction(requester, "Request Accepted", null, "Checking", amount, receiver + " accepted your request");
+            addTransaction(receiver, "Accepted Request", "Checking", null, amount, "You accepted request from " + requester);
 
             return true;
 
@@ -227,7 +178,73 @@ public class UserService {
         }
     }
 
-    // ================= GET REQUESTS =================
+    public boolean denyRequest(int id) {
+        String getRequestSql = "SELECT requester_username, receiver_username, amount FROM requests WHERE id=? AND status='PENDING'";
+        String updateSql = "UPDATE requests SET status='DENIED' WHERE id=? AND status='PENDING'";
+
+        try (Connection conn = databaseConnection.getConnection()) {
+
+            PreparedStatement getStmt = conn.prepareStatement(getRequestSql);
+            getStmt.setInt(1, id);
+
+            ResultSet rs = getStmt.executeQuery();
+
+            if (!rs.next()) {
+                return false;
+            }
+
+            String requester = rs.getString("requester_username");
+            String receiver = rs.getString("receiver_username");
+            BigDecimal amount = rs.getBigDecimal("amount");
+
+            PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+            updateStmt.setInt(1, id);
+
+            int rows = updateStmt.executeUpdate();
+
+            if (rows > 0) {
+                addTransaction(requester, "Request Denied", null, null, amount,
+                        receiver + " denied your money request");
+
+                addTransaction(receiver, "Denied Request", null, null, amount,
+                        "You denied money request from " + requester);
+
+                return true;
+            }
+
+            return false;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean transferBetweenAccounts(String username, String from, String to, BigDecimal amount) {
+        if (from == null || to == null || amount == null) return false;
+        if (from.equals(to) || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
+
+        String fromCol = from.equals("Checking") ? "checking_balance" : "savings_balance";
+        String toCol = to.equals("Checking") ? "checking_balance" : "savings_balance";
+
+        try (Connection conn = databaseConnection.getConnection()) {
+
+            BigDecimal balance = getBalance(conn, username, fromCol);
+            if (balance.compareTo(amount) < 0) return false;
+
+            updateBalance(conn, username, fromCol, amount.negate());
+            updateBalance(conn, username, toCol, amount);
+
+            addTransaction(username, "Internal Transfer", from, to, amount, "Moved from " + from + " to " + to);
+
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<String> getPendingRequests(String username) {
         List<String> list = new ArrayList<>();
 
@@ -252,12 +269,10 @@ public class UserService {
         return list;
     }
 
-    // ================= TRANSACTION HISTORY =================
     public List<String> getTransactionHistory(String username) {
         List<String> history = new ArrayList<>();
 
-        String sql = "SELECT transaction_type, amount, description, created_at " +
-                "FROM transactions WHERE username = ? ORDER BY created_at DESC";
+        String sql = "SELECT * FROM transactions WHERE username=? ORDER BY created_at DESC";
 
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -266,12 +281,10 @@ public class UserService {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                String transaction = rs.getString("created_at")
-                        + " | " + rs.getString("transaction_type")
-                        + " | $" + rs.getString("amount")
-                        + " | " + rs.getString("description");
-
-                history.add(transaction);
+                history.add(rs.getString("created_at") + " | " +
+                        rs.getString("transaction_type") + " | $" +
+                        rs.getString("amount") + " | " +
+                        rs.getString("description"));
             }
 
         } catch (Exception e) {
@@ -286,15 +299,14 @@ public class UserService {
 
         int monthNumber = getMonthNumber(monthName);
 
-        String sql = "SELECT transaction_type, amount, description, created_at " +
-                "FROM transactions WHERE username = ?";
+        String sql = "SELECT * FROM transactions WHERE username=?";
 
         if (monthNumber > 0) {
-            sql += " AND MONTH(created_at) = ?";
+            sql += " AND MONTH(created_at)=?";
         }
 
         if (year != null && !year.isBlank()) {
-            sql += " AND YEAR(created_at) = ?";
+            sql += " AND YEAR(created_at)=?";
         }
 
         sql += " ORDER BY created_at DESC";
@@ -303,13 +315,10 @@ public class UserService {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int index = 1;
-
-            stmt.setString(index, username);
-            index++;
+            stmt.setString(index++, username);
 
             if (monthNumber > 0) {
-                stmt.setInt(index, monthNumber);
-                index++;
+                stmt.setInt(index++, monthNumber);
             }
 
             if (year != null && !year.isBlank()) {
@@ -319,12 +328,10 @@ public class UserService {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                String transaction = rs.getString("created_at")
-                        + " | " + rs.getString("transaction_type")
-                        + " | $" + rs.getString("amount")
-                        + " | " + rs.getString("description");
-
-                history.add(transaction);
+                history.add(rs.getString("created_at") + " | " +
+                        rs.getString("transaction_type") + " | $" +
+                        rs.getString("amount") + " | " +
+                        rs.getString("description"));
             }
 
         } catch (Exception e) {
@@ -334,7 +341,6 @@ public class UserService {
         return history;
     }
 
-    // ================= HELPER METHODS =================
     private boolean userExists(String username) {
         String sql = "SELECT username FROM users WHERE username=?";
 
@@ -347,7 +353,6 @@ public class UserService {
             return rs.next();
 
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -410,7 +415,6 @@ public class UserService {
         }
     }
 
-    // ================= GENERATORS =================
     private String generatePin() {
         return String.valueOf(1000 + new Random().nextInt(9000));
     }

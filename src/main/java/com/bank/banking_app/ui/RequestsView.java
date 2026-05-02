@@ -13,23 +13,31 @@ import java.util.List;
 public class RequestsView {
 
     public static VBox create(String currentUsername, Runnable onBack) {
-        Label title = new Label("Incoming Money Requests");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        Label title = new Label("Money Requests");
+        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1f3c88;");
+
+        Label subtitle = new Label("Accept or deny incoming money requests");
+        subtitle.setStyle("-fx-font-size: 14px; -fx-text-fill: #555555;");
 
         VBox requestList = new VBox(12);
         requestList.setAlignment(Pos.CENTER_LEFT);
+        requestList.setPadding(new Insets(10));
 
         UserService userService = new UserService();
-
         List<String> requests = userService.getPendingRequests(currentUsername);
 
         if (requests.isEmpty()) {
-            requestList.getChildren().add(new Label("No pending requests."));
+            Label emptyLabel = new Label("No pending requests.");
+            emptyLabel.setStyle("-fx-text-fill: #555555;");
+            requestList.getChildren().add(emptyLabel);
         } else {
             for (String request : requests) {
                 Label requestLabel = new Label(request);
+                requestLabel.setWrapText(true);
+                requestLabel.setStyle("-fx-font-weight: bold;");
 
-                Button acceptButton = new Button("Accept Request");
+                Button acceptButton = makeBlueButton("Accept Request");
+                Button denyButton = makeLightButton("Deny Request");
 
                 acceptButton.setOnAction(e -> {
                     int requestId = getRequestId(request);
@@ -38,14 +46,34 @@ public class RequestsView {
                     if (success) {
                         requestLabel.setText(request + " | ACCEPTED");
                         acceptButton.setDisable(true);
+                        denyButton.setDisable(true);
                     } else {
-                        requestLabel.setText(request + " | FAILED");
+                        requestLabel.setText(request + " | ACCEPT FAILED");
                     }
                 });
 
-                VBox requestBox = new VBox(8);
-                requestBox.getChildren().addAll(requestLabel, acceptButton);
-                requestBox.setStyle("-fx-border-color: lightgray; -fx-padding: 10;");
+                denyButton.setOnAction(e -> {
+                    int requestId = getRequestId(request);
+                    boolean success = userService.denyRequest(requestId);
+
+                    if (success) {
+                        requestLabel.setText(request + " | DENIED");
+                        acceptButton.setDisable(true);
+                        denyButton.setDisable(true);
+                    } else {
+                        requestLabel.setText(request + " | DENY FAILED");
+                    }
+                });
+
+                VBox requestBox = new VBox(10);
+                requestBox.getChildren().addAll(requestLabel, acceptButton, denyButton);
+                requestBox.setPadding(new Insets(14));
+                requestBox.setStyle(
+                        "-fx-background-color: #f8f9fc;" +
+                                "-fx-border-color: #d9d9d9;" +
+                                "-fx-border-radius: 10;" +
+                                "-fx-background-radius: 10;"
+                );
 
                 requestList.getChildren().add(requestBox);
             }
@@ -53,18 +81,23 @@ public class RequestsView {
 
         ScrollPane scrollPane = new ScrollPane(requestList);
         scrollPane.setFitToWidth(true);
-        scrollPane.setMaxWidth(600);
-        scrollPane.setMaxHeight(350);
+        scrollPane.setMaxWidth(650);
+        scrollPane.setMaxHeight(340);
 
-        Button backButton = new Button("Back to Dashboard");
-        backButton.setPrefWidth(200);
+        Button backButton = makeLightButton("Back to Dashboard");
         backButton.setOnAction(e -> onBack.run());
 
-        VBox layout = new VBox(15);
-        layout.getChildren().addAll(title, scrollPane, backButton);
+        VBox card = new VBox(15);
+        card.getChildren().addAll(title, subtitle, scrollPane, backButton);
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(30));
+        card.setMaxWidth(740);
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #d9d9d9; -fx-border-radius: 16;");
 
+        VBox layout = new VBox(card);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(30));
+        layout.setStyle("-fx-background-color: #f3f6fb;");
 
         return layout;
     }
@@ -72,5 +105,19 @@ public class RequestsView {
     private static int getRequestId(String requestText) {
         String[] parts = requestText.split(" ");
         return Integer.parseInt(parts[2]);
+    }
+
+    private static Button makeBlueButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #1f3c88; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
+    }
+
+    private static Button makeLightButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #e8ecf7; -fx-text-fill: #1f3c88; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
     }
 }

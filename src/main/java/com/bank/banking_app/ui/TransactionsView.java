@@ -12,44 +12,38 @@ public class TransactionsView {
 
     public static VBox create(String username, Runnable onBack) {
         Label title = new Label("Transaction History");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1f3c88;");
+
+        Label filterLabel = new Label("Filter transactions by month and year");
+        filterLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #555555;");
 
         ComboBox<String> monthBox = new ComboBox<>();
         monthBox.getItems().addAll(
                 "All Months",
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December"
+                "January", "February", "March", "April",
+                "May", "June", "July", "August",
+                "September", "October", "November", "December"
         );
         monthBox.setValue("All Months");
-        monthBox.setMaxWidth(250);
+        monthBox.setMaxWidth(260);
 
         TextField yearField = new TextField();
         yearField.setPromptText("Year, example: 2026");
-        yearField.setMaxWidth(250);
+        yearField.setMaxWidth(260);
+        yearField.setStyle("-fx-padding: 9; -fx-background-radius: 8;");
 
-        Button searchButton = new Button("Search Transactions");
-        searchButton.setPrefWidth(180);
-
-        Button clearButton = new Button("Clear Filter");
-        clearButton.setPrefWidth(180);
+        Button searchButton = makeBlueButton("Search Transactions");
+        Button clearButton = makeLightButton("Clear Filter");
 
         VBox transactionList = new VBox(10);
         transactionList.setAlignment(Pos.CENTER_LEFT);
+        transactionList.setPadding(new Insets(10));
 
         ScrollPane scrollPane = new ScrollPane(transactionList);
         scrollPane.setFitToWidth(true);
         scrollPane.setMaxWidth(700);
-        scrollPane.setMaxHeight(350);
+        scrollPane.setMaxHeight(320);
+        scrollPane.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
 
         UserService userService = new UserService();
 
@@ -71,13 +65,13 @@ public class TransactionsView {
             loadTransactions(transactionList, userService.getTransactionHistory(username));
         });
 
-        Button backButton = new Button("Back to Dashboard");
-        backButton.setPrefWidth(180);
+        Button backButton = makeLightButton("Back to Dashboard");
         backButton.setOnAction(e -> onBack.run());
 
-        VBox layout = new VBox(15);
-        layout.getChildren().addAll(
+        VBox card = new VBox(14);
+        card.getChildren().addAll(
                 title,
+                filterLabel,
                 monthBox,
                 yearField,
                 searchButton,
@@ -86,8 +80,15 @@ public class TransactionsView {
                 backButton
         );
 
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(30));
+        card.setMaxWidth(780);
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #d9d9d9; -fx-border-radius: 16;");
+
+        VBox layout = new VBox(card);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(30));
+        layout.setStyle("-fx-background-color: #f3f6fb;");
 
         return layout;
     }
@@ -96,14 +97,37 @@ public class TransactionsView {
         transactionList.getChildren().clear();
 
         if (transactions.isEmpty()) {
-            transactionList.getChildren().add(new Label("No transactions found."));
+            Label emptyLabel = new Label("No transactions found.");
+            emptyLabel.setStyle("-fx-text-fill: #555555;");
+            transactionList.getChildren().add(emptyLabel);
             return;
         }
 
         for (String transaction : transactions) {
             Label transactionLabel = new Label(transaction);
-            transactionLabel.setStyle("-fx-border-color: lightgray; -fx-padding: 8;");
+            transactionLabel.setWrapText(true);
+            transactionLabel.setStyle(
+                    "-fx-background-color: #f8f9fc;" +
+                            "-fx-border-color: #d9d9d9;" +
+                            "-fx-border-radius: 8;" +
+                            "-fx-background-radius: 8;" +
+                            "-fx-padding: 10;"
+            );
             transactionList.getChildren().add(transactionLabel);
         }
+    }
+
+    private static Button makeBlueButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #1f3c88; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
+    }
+
+    private static Button makeLightButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #e8ecf7; -fx-text-fill: #1f3c88; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
     }
 }

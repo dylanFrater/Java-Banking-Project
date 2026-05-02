@@ -17,47 +17,47 @@ public class DashboardView {
                               Runnable onLogout) {
 
         Label welcomeLabel = new Label("Welcome to your banking dashboard, " + fullName);
-        welcomeLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+        welcomeLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1f3c88;");
 
         Label checkingTitle = new Label("Checking Account");
-        checkingTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        checkingTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #333333;");
 
-        Label checkingBalance = new Label("Balance: $" + checkingAmount);
+        Label checkingBalance = new Label("$" + checkingAmount);
+        checkingBalance.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0a7c3b;");
 
         VBox checkingBox = new VBox(8);
         checkingBox.getChildren().addAll(checkingTitle, checkingBalance);
         checkingBox.setAlignment(Pos.CENTER);
-        checkingBox.setPadding(new Insets(20));
-        checkingBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 8;");
+        checkingBox.setPadding(new Insets(22));
+        checkingBox.setMaxWidth(350);
+        checkingBox.setStyle("-fx-background-color: white; -fx-background-radius: 14; -fx-border-color: #d9d9d9; -fx-border-radius: 14;");
 
         Label savingsTitle = new Label("Savings Account");
-        savingsTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        savingsTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #333333;");
 
-        Label savingsBalance = new Label("Balance: $" + savingsAmount);
+        Label savingsBalance = new Label("$" + savingsAmount);
+        savingsBalance.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0a7c3b;");
 
         VBox savingsBox = new VBox(8);
         savingsBox.getChildren().addAll(savingsTitle, savingsBalance);
         savingsBox.setAlignment(Pos.CENTER);
-        savingsBox.setPadding(new Insets(20));
-        savingsBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 8;");
+        savingsBox.setPadding(new Insets(22));
+        savingsBox.setMaxWidth(350);
+        savingsBox.setStyle("-fx-background-color: white; -fx-background-radius: 14; -fx-border-color: #d9d9d9; -fx-border-radius: 14;");
 
-        Button transactionsButton = new Button("View Transactions");
-        transactionsButton.setPrefWidth(220);
+        Button transactionsButton = makeBlueButton("View Transactions");
         transactionsButton.setOnAction(e -> onTransactions.run());
 
-        Button transferButton = new Button("Money Actions");
-        transferButton.setPrefWidth(220);
+        Button transferButton = makeBlueButton("Money Actions");
         transferButton.setOnAction(e -> onTransfer.run());
 
-        Button requestsButton = new Button("View Requests");
-        requestsButton.setPrefWidth(220);
+        Button requestsButton = makeBlueButton("View Requests");
         requestsButton.setOnAction(e -> onRequests.run());
 
-        Button logoutButton = new Button("Logout");
-        logoutButton.setPrefWidth(220);
+        Button logoutButton = makeLightButton("Logout");
         logoutButton.setOnAction(e -> onLogout.run());
 
-        VBox layout = new VBox(18);
+        VBox layout = new VBox(16);
         layout.getChildren().addAll(
                 welcomeLabel,
                 checkingBox,
@@ -70,7 +70,22 @@ public class DashboardView {
 
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(30));
+        layout.setStyle("-fx-background-color: #f3f6fb;");
 
         return layout;
+    }
+
+    private static Button makeBlueButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #1f3c88; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
+    }
+
+    private static Button makeLightButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #e8ecf7; -fx-text-fill: #1f3c88; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
     }
 }

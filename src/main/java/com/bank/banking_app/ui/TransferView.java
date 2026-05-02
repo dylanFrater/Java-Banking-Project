@@ -13,7 +13,7 @@ public class TransferView {
     public static VBox create(String username, Runnable onBack) {
 
         Label title = new Label("Money Actions");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1f3c88;");
 
         Label sendRequestLabel = new Label("Send or Request Money");
         sendRequestLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
@@ -21,16 +21,15 @@ public class TransferView {
         TextField targetUserField = new TextField();
         targetUserField.setPromptText("Other user's username");
         targetUserField.setMaxWidth(300);
+        targetUserField.setStyle("-fx-padding: 9; -fx-background-radius: 8;");
 
         TextField amountField = new TextField();
         amountField.setPromptText("Amount");
         amountField.setMaxWidth(300);
+        amountField.setStyle("-fx-padding: 9; -fx-background-radius: 8;");
 
-        Button sendButton = new Button("Send Money");
-        sendButton.setPrefWidth(220);
-
-        Button requestButton = new Button("Request Money");
-        requestButton.setPrefWidth(220);
+        Button sendButton = makeBlueButton("Send Money");
+        Button requestButton = makeLightButton("Request Money");
 
         Label internalLabel = new Label("Transfer Between My Accounts");
         internalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
@@ -48,14 +47,14 @@ public class TransferView {
         TextField internalAmountField = new TextField();
         internalAmountField.setPromptText("Amount");
         internalAmountField.setMaxWidth(300);
+        internalAmountField.setStyle("-fx-padding: 9; -fx-background-radius: 8;");
 
-        Button internalTransferButton = new Button("Transfer Between Accounts");
-        internalTransferButton.setPrefWidth(220);
+        Button internalTransferButton = makeBlueButton("Transfer Between Accounts");
 
         Label messageLabel = new Label();
+        messageLabel.setStyle("-fx-font-weight: bold;");
 
-        Button backButton = new Button("Back to Dashboard");
-        backButton.setPrefWidth(220);
+        Button backButton = makeLightButton("Back to Dashboard");
 
         UserService service = new UserService();
 
@@ -110,12 +109,7 @@ public class TransferView {
                     return;
                 }
 
-                boolean success = service.transferBetweenAccounts(
-                        username,
-                        fromAccount,
-                        toAccount,
-                        amount
-                );
+                boolean success = service.transferBetweenAccounts(username, fromAccount, toAccount, amount);
 
                 if (success) {
                     messageLabel.setText("Internal transfer completed.");
@@ -133,29 +127,47 @@ public class TransferView {
 
         backButton.setOnAction(e -> onBack.run());
 
-        VBox layout = new VBox(12);
-        layout.getChildren().addAll(
+        VBox card = new VBox(12);
+        card.getChildren().addAll(
                 title,
-
                 sendRequestLabel,
                 targetUserField,
                 amountField,
                 sendButton,
                 requestButton,
-
                 internalLabel,
                 fromAccountBox,
                 toAccountBox,
                 internalAmountField,
                 internalTransferButton,
-
                 messageLabel,
                 backButton
         );
 
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(30));
+        card.setMaxWidth(420);
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #d9d9d9; -fx-border-radius: 16;");
+
+        VBox layout = new VBox(card);
         layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(25));
+        layout.setPadding(new Insets(30));
+        layout.setStyle("-fx-background-color: #f3f6fb;");
 
         return layout;
+    }
+
+    private static Button makeBlueButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #1f3c88; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
+    }
+
+    private static Button makeLightButton(String text) {
+        Button button = new Button(text);
+        button.setPrefWidth(230);
+        button.setStyle("-fx-background-color: #e8ecf7; -fx-text-fill: #1f3c88; -fx-font-weight: bold; -fx-background-radius: 8;");
+        return button;
     }
 }
