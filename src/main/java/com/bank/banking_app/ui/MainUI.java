@@ -39,14 +39,16 @@ public class MainUI extends Application {
     }
 
     private void showDashboardScreen() {
-        UserService userService = new UserService();
+        UserService service = new UserService();
 
-        Map<String, String> balances = userService.getBalances(currentUsername);
+        Map<String, String> balances = service.getBalances(currentUsername);
 
         String checking = balances.getOrDefault("checking", "0.00");
         String savings = balances.getOrDefault("savings", "0.00");
+        String fullName = service.getFullName(currentUsername);
 
         VBox layout = DashboardView.create(
+                fullName,
                 checking,
                 savings,
                 this::showTransactionsScreen,
@@ -65,7 +67,7 @@ public class MainUI extends Application {
 
     private void showTransferScreen() {
         VBox layout = TransferView.create(currentUsername, this::showDashboardScreen);
-        primaryStage.setScene(new Scene(layout, 650, 550));
+        primaryStage.setScene(new Scene(layout, 700, 650));
     }
 
     private void showRequestsScreen() {

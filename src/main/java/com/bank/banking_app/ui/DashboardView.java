@@ -8,18 +8,20 @@ import javafx.scene.layout.VBox;
 
 public class DashboardView {
 
-    public static VBox create(String checkingAmount,
+    public static VBox create(String fullName,
+                              String checkingAmount,
                               String savingsAmount,
                               Runnable onTransactions,
                               Runnable onTransfer,
                               Runnable onRequests,
                               Runnable onLogout) {
 
-        Label welcomeLabel = new Label("Welcome to Your Banking Dashboard");
-        welcomeLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        Label welcomeLabel = new Label("Welcome to your banking dashboard, " + fullName);
+        welcomeLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
 
         Label checkingTitle = new Label("Checking Account");
         checkingTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
         Label checkingBalance = new Label("Balance: $" + checkingAmount);
 
         VBox checkingBox = new VBox(8);
@@ -30,6 +32,7 @@ public class DashboardView {
 
         Label savingsTitle = new Label("Savings Account");
         savingsTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
         Label savingsBalance = new Label("Balance: $" + savingsAmount);
 
         VBox savingsBox = new VBox(8);
@@ -39,19 +42,19 @@ public class DashboardView {
         savingsBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 8;");
 
         Button transactionsButton = new Button("View Transactions");
-        transactionsButton.setPrefWidth(200);
+        transactionsButton.setPrefWidth(220);
         transactionsButton.setOnAction(e -> onTransactions.run());
 
-        Button transferButton = new Button("Send / Request Money");
-        transferButton.setPrefWidth(200);
+        Button transferButton = new Button("Money Actions");
+        transferButton.setPrefWidth(220);
         transferButton.setOnAction(e -> onTransfer.run());
 
         Button requestsButton = new Button("View Requests");
-        requestsButton.setPrefWidth(200);
+        requestsButton.setPrefWidth(220);
         requestsButton.setOnAction(e -> onRequests.run());
 
         Button logoutButton = new Button("Logout");
-        logoutButton.setPrefWidth(200);
+        logoutButton.setPrefWidth(220);
         logoutButton.setOnAction(e -> onLogout.run());
 
         VBox layout = new VBox(18);
