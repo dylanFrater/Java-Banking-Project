@@ -6,7 +6,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.util.List;
 import java.util.Map;
 
 public class MainUI extends Application {
@@ -29,18 +28,14 @@ public class MainUI extends Application {
                 this::showSignupScreen
         );
 
-        Scene scene = new Scene(layout, 500, 400);
-
         primaryStage.setTitle("Banking App");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(layout, 500, 400));
         primaryStage.show();
     }
 
     private void showSignupScreen() {
         VBox layout = SignupView.create(this::showLoginScreen);
-
-        Scene scene = new Scene(layout, 600, 600);
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(layout, 600, 600));
     }
 
     private void showDashboardScreen() {
@@ -56,28 +51,26 @@ public class MainUI extends Application {
                 savings,
                 this::showTransactionsScreen,
                 this::showTransferScreen,
+                this::showRequestsScreen,
                 this::showLoginScreen
         );
 
-        Scene scene = new Scene(layout, 650, 500);
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(layout, 650, 550));
     }
 
     private void showTransactionsScreen() {
-        UserService userService = new UserService();
-        List<String> transactions = userService.getTransactionHistory(currentUsername);
-
-        VBox layout = TransactionsView.create(transactions, this::showDashboardScreen);
-
-        Scene scene = new Scene(layout, 750, 550);
-        primaryStage.setScene(scene);
+        VBox layout = TransactionsView.create(currentUsername, this::showDashboardScreen);
+        primaryStage.setScene(new Scene(layout, 850, 600));
     }
 
     private void showTransferScreen() {
         VBox layout = TransferView.create(currentUsername, this::showDashboardScreen);
+        primaryStage.setScene(new Scene(layout, 650, 550));
+    }
 
-        Scene scene = new Scene(layout, 650, 500);
-        primaryStage.setScene(scene);
+    private void showRequestsScreen() {
+        VBox layout = RequestsView.create(currentUsername, this::showDashboardScreen);
+        primaryStage.setScene(new Scene(layout, 700, 550));
     }
 
     public static void main(String[] args) {

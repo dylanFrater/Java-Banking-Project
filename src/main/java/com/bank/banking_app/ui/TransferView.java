@@ -4,7 +4,6 @@ import com.bank.banking_app.service.UserService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -13,73 +12,62 @@ import java.math.BigDecimal;
 
 public class TransferView {
 
-    public static VBox create(String username, Runnable onBack) {
-        Label title = new Label("Transfer Money");
+    public static VBox create(String currentUsername, Runnable onBack) {
+        Label title = new Label("Send or Request Money");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        ComboBox<String> fromAccountBox = new ComboBox<>();
-        fromAccountBox.getItems().addAll("Checking", "Savings");
-        fromAccountBox.setPromptText("From Account");
-        fromAccountBox.setMaxWidth(250);
-
-        ComboBox<String> toAccountBox = new ComboBox<>();
-        toAccountBox.getItems().addAll("Checking", "Savings");
-        toAccountBox.setPromptText("To Account");
-        toAccountBox.setMaxWidth(250);
+        TextField targetUserField = new TextField();
+        targetUserField.setPromptText("Other user's username");
+        targetUserField.setMaxWidth(300);
 
         TextField amountField = new TextField();
         amountField.setPromptText("Amount");
-        amountField.setMaxWidth(250);
+        amountField.setMaxWidth(300);
 
-        Button submitButton = new Button("Submit Transfer");
-        submitButton.setPrefWidth(180);
+        Button sendButton = new Button("Send Money");
+        sendButton.setPrefWidth(200);
+
+        Button requestButton = new Button("Request Money");
+        requestButton.setPrefWidth(200);
+
+        Button backButton = new Button("Back to Dashboard");
+        backButton.setPrefWidth(200);
 
         Label messageLabel = new Label();
 
-        submitButton.setOnAction(e -> {
-            String fromAccount = fromAccountBox.getValue();
-            String toAccount = toAccountBox.getValue();
-            String amountText = amountField.getText();
+        UserService userService = new UserService();
 
-            if (fromAccount == null || toAccount == null || amountText.isBlank()) {
-                messageLabel.setText("Please fill in all fields.");
-                return;
-            }
-
-            if (fromAccount.equals(toAccount)) {
-                messageLabel.setText("Accounts must be different.");
-                return;
-            }
-
+        sendButton.setOnAction(e -> {
             try {
-                BigDecimal amount = new BigDecimal(amountText);
+                BigDecimal amount = new BigDecimal(amountField.getText().trim());
+                boolean success = userService.sendMoney(currentUsername, targetUserField.getText().trim(), amount);
 
-                UserService userService = new UserService();
-                boolean success = userService.transfer(username, fromAccount, toAccount, amount);
-
-                if (success) {
-                    messageLabel.setText("Transfer completed successfully.");
-                    amountField.clear();
-                } else {
-                    messageLabel.setText("Transfer failed. Check balance or amount.");
-                }
-
-            } catch (NumberFormatException ex) {
-                messageLabel.setText("Please enter a valid number.");
+                messageLabel.setText(success ? "Money sent successfully." : "Send failed.");
+            } catch (Exception ex) {
+                messageLabel.setText("Invalid input.");
             }
         });
 
-        Button backButton = new Button("Back to Dashboard");
-        backButton.setPrefWidth(180);
+        requestButton.setOnAction(e -> {
+            try {
+                BigDecimal amount = new BigDecimal(amountField.getText().trim());
+                boolean success = userService.requestMoney(currentUsername, targetUserField.getText().trim(), amount);
+
+                messageLabel.setText(success ? "Request sent successfully." : "Request failed.");
+            } catch (Exception ex) {
+                messageLabel.setText("Invalid input.");
+            }
+        });
+
         backButton.setOnAction(e -> onBack.run());
 
         VBox layout = new VBox(15);
         layout.getChildren().addAll(
                 title,
-                fromAccountBox,
-                toAccountBox,
+                targetUserField,
                 amountField,
-                submitButton,
+                sendButton,
+                requestButton,
                 messageLabel,
                 backButton
         );

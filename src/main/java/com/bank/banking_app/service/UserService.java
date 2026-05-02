@@ -10,7 +10,6 @@ import java.util.*;
 
 public class UserService {
 
-    // Creates a new user manually if another part of the project uses User objects
     public void createUser(User user) throws SQLException {
         String sql = "INSERT INTO users (username, password_hash, pin_hash, card_number, full_name, cvc, expiration_date) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -30,7 +29,6 @@ public class UserService {
         }
     }
 
-    // Registers a new user from the signup screen
     public boolean registerUser(String fullName, String username, String password) {
         String sql = "INSERT INTO users " +
                 "(username, password_hash, pin_hash, card_number, full_name, cvc, expiration_date, routing_number, savings_balance, checking_balance) " +
@@ -47,8 +45,6 @@ public class UserService {
             stmt.setString(6, generateCvc());
             stmt.setString(7, generateExpirationDate());
             stmt.setString(8, "000000000");
-
-            // New users start with $0.00 in both accounts
             stmt.setBigDecimal(9, new BigDecimal("0.00"));
             stmt.setBigDecimal(10, new BigDecimal("0.00"));
 
@@ -61,7 +57,6 @@ public class UserService {
         }
     }
 
-    // Checks username and password against the database
     public boolean loginUser(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ?";
 
@@ -81,7 +76,6 @@ public class UserService {
         }
     }
 
-    // Gets checking and savings balances for the logged-in user
     public Map<String, String> getBalances(String username) {
         Map<String, String> balances = new HashMap<>();
 
@@ -106,7 +100,6 @@ public class UserService {
         return balances;
     }
 
-    // Transfers money between checking and savings
     public boolean transfer(String username, String fromAccount, String toAccount, BigDecimal amount) {
         if (fromAccount.equals(toAccount) || amount.compareTo(BigDecimal.ZERO) <= 0) {
             return false;
@@ -121,7 +114,6 @@ public class UserService {
 
         try (Connection conn = databaseConnection.getConnection()) {
 
-            // 1. Check current balance first
             BigDecimal currentBalance = getCurrentBalance(conn, username, fromColumn);
 
             if (currentBalance.compareTo(amount) < 0) {
@@ -130,7 +122,6 @@ public class UserService {
                 return false;
             }
 
-            // 2. Update balances
             String updateSql = "UPDATE users SET " + fromColumn + " = " + fromColumn + " - ?, " +
                     toColumn + " = " + toColumn + " + ? WHERE username = ?";
 
@@ -141,7 +132,6 @@ public class UserService {
                 stmt.executeUpdate();
             }
 
-            // 3. Save transaction history
             addTransaction(username, "Transfer", fromAccount, toAccount, amount,
                     "Transfer from " + fromAccount + " to " + toAccount);
 
@@ -153,7 +143,168 @@ public class UserService {
         }
     }
 
-    // Gets all transactions for the logged-in user
+    public boolean sendMoney(String senderUsername, String receiverUsername, BigDecimal amount) {
+        if (senderUsername.equals(receiverUsername) || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+
+        if (!userExists(receiverUsername)) {
+            return false;
+        }
+
+        try (Connection conn = databaseConnection.getConnection()) {
+
+            BigDecimal senderBalance = getCurrentBalance(conn, senderUsername, "checking_balance");
+
+            if (senderBalance.compareTo(amount) < 0) {
+                addTransaction(senderUsername, "Send Failed", "Checking", null, amount,
+                        "Failed to send money to " + receiverUsername + " due to insufficient funds");
+                return false;
+            }
+
+            String removeFromSender = "UPDATE users SET checking_balance = checking_balance - ? WHERE username = ?";
+            String addToReceiver = "UPDATE users SET checking_balance = checking_balance + ? WHERE username = ?";
+
+            try (PreparedStatement stmt = conn.prepareStatement(removeFromSender)) {
+                stmt.setBigDecimal(1, amount);
+                stmt.setString(2, senderUsername);
+                stmt.executeUpdate();
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(addToReceiver)) {
+                stmt.setBigDecimal(1, amount);
+                stmt.setString(2, receiverUsername);
+                stmt.executeUpdate();
+            }
+
+            addTransaction(senderUsername, "Sent Money", "Checking", null, amount,
+                    "Sent money to " + receiverUsername);
+
+            addTransaction(receiverUsername, "Received Money", null, "Checking", amount,
+                    "Received money from " + senderUsername);
+
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean requestMoney(String requesterUsername, String receiverUsername, BigDecimal amount) {
+        if (requesterUsername.equals(receiverUsername) || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+
+        if (!userExists(receiverUsername)) {
+            return false;
+        }
+
+        String sql = "INSERT INTO requests (requester_username, receiver_username, amount, status) " +
+                "VALUES (?, ?, ?, 'PENDING')";
+
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, requesterUsername);
+            stmt.setString(2, receiverUsername);
+            stmt.setBigDecimal(3, amount);
+
+            stmt.executeUpdate();
+
+            addTransaction(requesterUsername, "Money Requested", null, null, amount,
+                    "Requested money from " + receiverUsername);
+
+            addTransaction(receiverUsername, "Request Received", null, null, amount,
+                    requesterUsername + " requested money from you");
+
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<String> getPendingRequests(String username) {
+        List<String> requests = new ArrayList<>();
+
+        String sql = "SELECT id, requester_username, amount, created_at FROM requests " +
+                "WHERE receiver_username = ? AND status = 'PENDING' ORDER BY created_at DESC";
+
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String request = "Request ID: " + rs.getInt("id")
+                        + " | From: " + rs.getString("requester_username")
+                        + " | Amount: $" + rs.getString("amount")
+                        + " | Date: " + rs.getString("created_at");
+
+                requests.add(request);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return requests;
+    }
+
+    public boolean acceptRequest(int requestId) {
+        String getRequestSql = "SELECT requester_username, receiver_username, amount, status FROM requests WHERE id = ?";
+
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(getRequestSql)) {
+
+            stmt.setInt(1, requestId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (!rs.next()) {
+                return false;
+            }
+
+            String requester = rs.getString("requester_username");
+            String receiver = rs.getString("receiver_username");
+            BigDecimal amount = rs.getBigDecimal("amount");
+            String status = rs.getString("status");
+
+            if (!status.equals("PENDING")) {
+                return false;
+            }
+
+            boolean sent = sendMoney(receiver, requester, amount);
+
+            if (!sent) {
+                return false;
+            }
+
+            String updateSql = "UPDATE requests SET status = 'ACCEPTED' WHERE id = ?";
+
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                updateStmt.setInt(1, requestId);
+                updateStmt.executeUpdate();
+            }
+
+            addTransaction(requester, "Request Accepted", null, "Checking", amount,
+                    receiver + " accepted your money request");
+
+            addTransaction(receiver, "Accepted Request", "Checking", null, amount,
+                    "You accepted money request from " + requester);
+
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<String> getTransactionHistory(String username) {
         List<String> history = new ArrayList<>();
 
@@ -183,7 +334,77 @@ public class UserService {
         return history;
     }
 
-    // Helper method: gets one balance from database
+    public List<String> getTransactionsByMonthAndYear(String username, String monthName, String year) {
+        List<String> history = new ArrayList<>();
+
+        int monthNumber = getMonthNumber(monthName);
+
+        String sql = "SELECT transaction_type, amount, description, created_at " +
+                "FROM transactions WHERE username = ?";
+
+        if (monthNumber > 0) {
+            sql += " AND MONTH(created_at) = ?";
+        }
+
+        if (!year.isBlank()) {
+            sql += " AND YEAR(created_at) = ?";
+        }
+
+        sql += " ORDER BY created_at DESC";
+
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int index = 1;
+
+            stmt.setString(index, username);
+            index++;
+
+            if (monthNumber > 0) {
+                stmt.setInt(index, monthNumber);
+                index++;
+            }
+
+            if (!year.isBlank()) {
+                stmt.setString(index, year);
+            }
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String transaction = rs.getString("created_at")
+                        + " | " + rs.getString("transaction_type")
+                        + " | $" + rs.getString("amount")
+                        + " | " + rs.getString("description");
+
+                history.add(transaction);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return history;
+    }
+
+    private boolean userExists(String username) {
+        String sql = "SELECT username FROM users WHERE username = ?";
+
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+
+            ResultSet rs = stmt.executeQuery();
+
+            return rs.next();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private BigDecimal getCurrentBalance(Connection conn, String username, String balanceColumn) throws SQLException {
         String sql = "SELECT " + balanceColumn + " FROM users WHERE username = ?";
 
@@ -200,7 +421,6 @@ public class UserService {
         return BigDecimal.ZERO;
     }
 
-    // Helper method: saves a transaction into the transactions table
     private void addTransaction(String username, String type, String fromAccount, String toAccount,
                                 BigDecimal amount, String description) {
         String sql = "INSERT INTO transactions (username, transaction_type, from_account, to_account, amount, description) " +
@@ -223,7 +443,6 @@ public class UserService {
         }
     }
 
-    // Helper method: converts account name to database column name
     private String getBalanceColumn(String accountType) {
         if (accountType.equalsIgnoreCase("Checking")) {
             return "checking_balance";
@@ -236,28 +455,66 @@ public class UserService {
         return null;
     }
 
-    // Generates a random 4-digit PIN
+    private int getMonthNumber(String monthName) {
+        if (monthName == null || monthName.equals("All Months")) {
+            return 0;
+        }
+
+        switch (monthName) {
+            case "January":
+                return 1;
+            case "February":
+                return 2;
+            case "March":
+                return 3;
+            case "April":
+                return 4;
+            case "May":
+                return 5;
+            case "June":
+                return 6;
+            case "July":
+                return 7;
+            case "August":
+                return 8;
+            case "September":
+                return 9;
+            case "October":
+                return 10;
+            case "November":
+                return 11;
+            case "December":
+                return 12;
+            default:
+                return 0;
+        }
+    }
+
     private String generatePin() {
         Random random = new Random();
         return String.valueOf(1000 + random.nextInt(9000));
     }
 
-    // Generates a simple 16-digit card number
     private String generateCardNumber() {
         Random random = new Random();
-        return "4" + String.valueOf(System.currentTimeMillis()).substring(0, 12)
-                + random.nextInt(100);
+
+        String cardNumber = "4";
+
+        for (int i = 0; i < 15; i++) {
+            cardNumber += random.nextInt(10);
+        }
+
+        return cardNumber;
     }
 
-    // Generates a random 3-digit CVC
     private String generateCvc() {
         Random random = new Random();
         return String.valueOf(100 + random.nextInt(900));
     }
 
-    // Generates an expiration date 4 years from now
     private String generateExpirationDate() {
         LocalDate futureDate = LocalDate.now().plusYears(4);
+
         int month = futureDate.getMonthValue();
         int year = futureDate.getYear() % 100;
 
