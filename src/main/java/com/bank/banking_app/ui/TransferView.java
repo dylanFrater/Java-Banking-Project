@@ -10,9 +10,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 /*
  This screen handles sending money,
@@ -41,6 +43,27 @@ public class TransferView {
 
         Label title = new Label("Pay & Transfer");
         title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #543100;");
+
+        UserService service = new UserService();
+        Map<String, String> balances = service.getBalances(username);
+        Label checkingBalanceLabel = balanceLabel("Checking: $" + balances.getOrDefault("checking", "0.00"));
+        Label savingsBalanceLabel = balanceLabel("Savings: $" + balances.getOrDefault("savings", "0.00"));
+
+        Runnable refreshBalances = () -> {
+            Map<String, String> latestBalances = service.getBalances(username);
+            checkingBalanceLabel.setText("Checking: $" + latestBalances.getOrDefault("checking", "0.00"));
+            savingsBalanceLabel.setText("Savings: $" + latestBalances.getOrDefault("savings", "0.00"));
+        };
+
+        /*
+         Keep these balance boxes even
+         so they line up better.
+        */
+        HBox balancesRow = new HBox(14);
+        balancesRow.getChildren().addAll(checkingBalanceLabel, savingsBalanceLabel);
+        balancesRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(checkingBalanceLabel, Priority.ALWAYS);
+        HBox.setHgrow(savingsBalanceLabel, Priority.ALWAYS);
 
         Label sendRequestLabel = new Label("Send or request money");
         sendRequestLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #874f00;");
@@ -78,8 +101,6 @@ public class TransferView {
 
         Button internalTransferButton = makeBlueButton("Transfer Between Accounts");
 
-        UserService service = new UserService();
-
         sendButton.setOnAction(e -> {
             try {
                 String targetUser = targetUserField.getText().trim();
@@ -99,6 +120,7 @@ public class TransferView {
 
                 targetUserField.clear();
                 amountField.clear();
+                refreshBalances.run();
                 showInfo("Payment sent", "Your money was sent successfully.");
             } catch (Exception ex) {
                 showError("Invalid amount", "Enter a valid amount before sending money.");
@@ -124,6 +146,7 @@ public class TransferView {
 
                 targetUserField.clear();
                 amountField.clear();
+                refreshBalances.run();
                 showInfo("Request sent", "Your money request was sent successfully.");
             } catch (Exception ex) {
                 showError("Invalid amount", "Enter a valid amount before sending the request.");
@@ -155,6 +178,7 @@ public class TransferView {
                 fromAccountBox.setValue(null);
                 toAccountBox.setValue(null);
                 internalAmountField.clear();
+                refreshBalances.run();
                 showInfo("Transfer completed", "Your money was moved between accounts.");
             } catch (Exception ex) {
                 showError("Invalid amount", "Enter a valid amount before transferring money.");
@@ -192,7 +216,7 @@ public class TransferView {
         actionRow.setAlignment(Pos.TOP_CENTER);
 
         VBox card = new VBox(18);
-        card.getChildren().addAll(title, actionRow);
+        card.getChildren().addAll(title, balancesRow, actionRow);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(30));
         card.setMaxWidth(840);
@@ -220,6 +244,23 @@ public class TransferView {
         return button;
     }
 
+    private static Label balanceLabel(String text) {
+        Label label = new Label(text);
+        label.setMaxWidth(Double.MAX_VALUE);
+        label.setAlignment(Pos.CENTER_LEFT);
+        label.setStyle(
+                "-fx-background-color: #fff3de;" +
+                        "-fx-border-color: #ffb854;" +
+                        "-fx-border-radius: 10;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-padding: 12 18 12 18;" +
+                        "-fx-text-fill: #0c7c59;" +
+                        "-fx-font-size: 15px;" +
+                        "-fx-font-weight: bold;"
+        );
+        return label;
+    }
+
     private static void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.setHeaderText(title);
@@ -232,3 +273,4 @@ public class TransferView {
         alert.showAndWait();
     }
 }
+

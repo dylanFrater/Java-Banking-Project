@@ -621,6 +621,52 @@ public class UserService {
         }
     }
 
+    public boolean deleteSavingsGoal(String username, int goalId) {
+        String trimmedUsername = safeTrim(username);
+        String selectSql = "SELECT goal_name, current_amount FROM savings_goals WHERE id=? AND username=?";
+        String deleteSql = "DELETE FROM savings_goals WHERE id=? AND username=?";
+
+        try (Connection conn = databaseConnection.getConnection()) {
+            PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+            selectStmt.setInt(1, goalId);
+            selectStmt.setString(2, trimmedUsername);
+
+            ResultSet rs = selectStmt.executeQuery();
+            if (!rs.next()) {
+                return false;
+            }
+
+            String goalName = rs.getString("goal_name");
+            BigDecimal currentAmount = rs.getBigDecimal("current_amount");
+
+            PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+            deleteStmt.setInt(1, goalId);
+            deleteStmt.setString(2, trimmedUsername);
+
+            if (deleteStmt.executeUpdate() <= 0) {
+                return false;
+            }
+
+            if (currentAmount != null && currentAmount.compareTo(BigDecimal.ZERO) > 0) {
+                updateBalance(conn, trimmedUsername, "savings_balance", currentAmount);
+                addTransaction(
+                        trimmedUsername,
+                        "Savings Goal Withdrawal",
+                        null,
+                        SAVINGS,
+                        currentAmount,
+                        "Removed from goal: " + goalName
+                );
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean contributeToSavingsGoal(String username, int goalId, String fromAccount, BigDecimal amount) {
         username = safeTrim(username);
         fromAccount = safeTrim(fromAccount);

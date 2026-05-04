@@ -60,13 +60,19 @@ public class DashboardView {
         Label summaryLabel = new Label("Your balances and latest account activity are all in one place.");
         summaryLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #874f00;");
 
+        /*
+         Keep the welcome area smaller
+         so it does not look too wide.
+        */
         VBox heroText = new VBox(6);
         heroText.getChildren().addAll(brandRow, welcomeLabel, summaryLabel);
         heroText.setAlignment(Pos.TOP_LEFT);
+        heroText.setMaxWidth(760);
 
         HBox heroRow = new HBox(heroText);
         heroRow.setAlignment(Pos.TOP_LEFT);
         heroRow.setPadding(new Insets(24));
+        heroRow.setMaxWidth(1260);
         heroRow.setStyle(
                 "-fx-background-color: #ffcd87;" +
                         "-fx-background-radius: 20;" +
@@ -308,3 +314,4 @@ public class DashboardView {
         return button;
     }
 }
+

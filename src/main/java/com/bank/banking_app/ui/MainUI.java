@@ -26,6 +26,19 @@ public class MainUI extends Application {
         showLoginScreen();
     }
 
+    private void changeScene(VBox layout, double defaultWidth, double defaultHeight) {
+        double width = defaultWidth;
+        double height = defaultHeight;
+
+        if (primaryStage.getScene() != null) {
+            width = primaryStage.getWidth();
+            height = primaryStage.getHeight();
+        }
+
+        primaryStage.setScene(new Scene(layout, width, height));
+        primaryStage.show();
+    }
+
     /*
      These methods change scenes
      based on where the user goes.
@@ -40,13 +53,12 @@ public class MainUI extends Application {
         );
 
         primaryStage.setTitle("Bank Of Java");
-        primaryStage.setScene(new Scene(layout, 500, 400));
-        primaryStage.show();
+        changeScene(layout, 500, 400);
     }
 
     private void showSignupScreen() {
         VBox layout = SignupView.create(this::showLoginScreen);
-        primaryStage.setScene(new Scene(layout, 600, 600));
+        changeScene(layout, 600, 600);
     }
 
     /*
@@ -75,7 +87,7 @@ public class MainUI extends Application {
                 this::showLoginScreen
         );
 
-        primaryStage.setScene(new Scene(layout, 980, 760));
+        changeScene(layout, 980, 760);
     }
 
     private void showTransactionsScreen() {
@@ -88,7 +100,7 @@ public class MainUI extends Application {
                 this::showProfileScreen,
                 this::showLoginScreen
         );
-        primaryStage.setScene(new Scene(layout, 980, 760));
+        changeScene(layout, 980, 760);
     }
 
     private void showProfileScreen() {
@@ -101,7 +113,7 @@ public class MainUI extends Application {
                 this::showProfileScreen,
                 this::showLoginScreen
         );
-        primaryStage.setScene(new Scene(layout, 980, 760));
+        changeScene(layout, 980, 760);
     }
 
     private void showSavingsGoalsScreen() {
@@ -114,7 +126,7 @@ public class MainUI extends Application {
                 this::showProfileScreen,
                 this::showLoginScreen
         );
-        primaryStage.setScene(new Scene(layout, 980, 760));
+        changeScene(layout, 980, 760);
     }
 
     private void showTransferScreen() {
@@ -127,7 +139,7 @@ public class MainUI extends Application {
                 this::showProfileScreen,
                 this::showLoginScreen
         );
-        primaryStage.setScene(new Scene(layout, 980, 760));
+        changeScene(layout, 980, 760);
     }
 
     public static void main(String[] args) {
