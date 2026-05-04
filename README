@@ -23,3 +23,5 @@ A mock banking application built to learn Spring Boot, MySQL, and Java applicati
 
 ## Current Goal
 Build account creation and database connection first.
+
+.\mvnw.cmd javafx:run

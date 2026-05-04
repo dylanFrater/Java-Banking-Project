@@ -6,15 +6,20 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 
+/*
+ This is the signup screen.
+ It creates a new account
+ after basic validation.
+*/
 public class SignupView {
 
     public static VBox create(Runnable onBackToLogin) {
 
         Label title = new Label("Create Account");
-        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1f3c88;");
+        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #543100;");
 
         Label subtitle = new Label("Enter your information below");
-        subtitle.setStyle("-fx-font-size: 15px; -fx-text-fill: #555555;");
+        subtitle.setStyle("-fx-font-size: 15px; -fx-text-fill: #874f00;");
 
         TextField fullNameField = new TextField();
         fullNameField.setPromptText("Full Name");
@@ -42,21 +47,23 @@ public class SignupView {
             String username = usernameField.getText().trim();
             String password = passwordField.getText().trim();
 
-            if (fullName.isBlank() || username.isBlank() || password.isBlank()) {
-                messageLabel.setText("Please fill in all fields.");
+            UserService userService = new UserService();
+            String validationMessage = userService.validateRegistrationInput(fullName, username, password);
+
+            if (validationMessage != null) {
+                messageLabel.setText(validationMessage);
                 return;
             }
 
-            UserService userService = new UserService();
             boolean success = userService.registerUser(fullName, username, password);
 
             if (success) {
-                messageLabel.setText("Account created. Go back and log in.");
+                messageLabel.setText("Account created. You can log in now.");
                 fullNameField.clear();
                 usernameField.clear();
                 passwordField.clear();
             } else {
-                messageLabel.setText("Could not create account. Username may already exist.");
+                messageLabel.setText("Could not create the account.");
             }
         });
 
@@ -77,12 +84,12 @@ public class SignupView {
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(35));
         card.setMaxWidth(420);
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #d9d9d9; -fx-border-radius: 16;");
+        card.setStyle("-fx-background-color: #f7f5f1; -fx-background-radius: 16; -fx-border-color: #ffb854; -fx-border-radius: 16;");
 
         VBox layout = new VBox(card);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        layout.setStyle("-fx-background-color: #f3f6fb;");
+        layout.setStyle("-fx-background-color: #fff1d6;");
 
         return layout;
     }
@@ -90,14 +97,14 @@ public class SignupView {
     private static Button makeBlueButton(String text) {
         Button button = new Button(text);
         button.setPrefWidth(230);
-        button.setStyle("-fx-background-color: #1f3c88; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        button.setStyle("-fx-background-color: #ed8b00; -fx-text-fill: #2b1700; -fx-font-weight: bold; -fx-background-radius: 8;");
         return button;
     }
 
     private static Button makeLightButton(String text) {
         Button button = new Button(text);
         button.setPrefWidth(230);
-        button.setStyle("-fx-background-color: #e8ecf7; -fx-text-fill: #1f3c88; -fx-font-weight: bold; -fx-background-radius: 8;");
+        button.setStyle("-fx-background-color: #ffcd87; -fx-text-fill: #543100; -fx-font-weight: bold; -fx-background-radius: 8;");
         return button;
     }
 }

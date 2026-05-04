@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
+/*
+ This utility class stores small
+ helper methods for card info.
+*/
 public class AccountUtil {
     private static final Random RANDOM = new Random();
 

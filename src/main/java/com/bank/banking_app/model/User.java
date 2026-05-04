@@ -1,5 +1,10 @@
 package com.bank.banking_app.model;
 
+/*
+ This is a basic user model.
+ A lot of user data is still
+ read directly from the database.
+*/
 public class User {
     private String username;
     private String password;

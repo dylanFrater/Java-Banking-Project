@@ -10,6 +10,11 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 
+/*
+ This was the older requests screen.
+ Requests are on the dashboard now,
+ but I kept this class for reference.
+*/
 public class RequestsView {
 
     public static VBox create(String currentUsername, Runnable onBack) {

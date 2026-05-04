@@ -8,15 +8,20 @@ import javafx.scene.layout.VBox;
 
 import java.util.function.Consumer;
 
+/*
+ This is the login screen.
+ It checks the account and then
+ sends the user into the app.
+*/
 public class LoginView {
 
     public static VBox create(Consumer<String> onSuccess, Runnable onSignup) {
 
-        Label title = new Label("Banking App");
-        title.setStyle("-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #1f3c88;");
+        Label title = new Label("Bank Of Java");
+        title.setStyle("-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #543100;");
 
         Label subtitle = new Label("Login to your account");
-        subtitle.setStyle("-fx-font-size: 15px; -fx-text-fill: #555555;");
+        subtitle.setStyle("-fx-font-size: 15px; -fx-text-fill: #874f00;");
 
         TextField usernameField = new TextField();
         usernameField.setPromptText("Username");
@@ -30,20 +35,26 @@ public class LoginView {
 
         Button loginButton = new Button("Login");
         loginButton.setPrefWidth(220);
-        loginButton.setStyle("-fx-background-color: #1f3c88; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        loginButton.setStyle("-fx-background-color: #ed8b00; -fx-text-fill: #2b1700; -fx-font-weight: bold; -fx-background-radius: 8;");
 
         Button signupButton = new Button("Create Account");
         signupButton.setPrefWidth(220);
-        signupButton.setStyle("-fx-background-color: #e8ecf7; -fx-text-fill: #1f3c88; -fx-font-weight: bold; -fx-background-radius: 8;");
+        signupButton.setStyle("-fx-background-color: #ffcd87; -fx-text-fill: #543100; -fx-font-weight: bold; -fx-background-radius: 8;");
 
         Label message = new Label();
-        message.setStyle("-fx-text-fill: #cc0000;");
+        message.setStyle("-fx-text-fill: #9a3412; -fx-font-weight: bold;");
 
         loginButton.setOnAction(e -> {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
 
             UserService userService = new UserService();
+            String validationMessage = userService.validateLoginInput(username, password);
+
+            if (validationMessage != null) {
+                message.setText(validationMessage);
+                return;
+            }
 
             if (userService.loginUser(username, password)) {
                 onSuccess.accept(username);
@@ -59,12 +70,12 @@ public class LoginView {
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(35));
         card.setMaxWidth(380);
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #d9d9d9; -fx-border-radius: 16;");
+        card.setStyle("-fx-background-color: #f7f5f1; -fx-background-radius: 16; -fx-border-color: #ffb854; -fx-border-radius: 16;");
 
         VBox layout = new VBox(card);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        layout.setStyle("-fx-background-color: #f3f6fb;");
+        layout.setStyle("-fx-background-color: #fff1d6;");
 
         return layout;
     }
