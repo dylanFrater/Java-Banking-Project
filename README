@@ -1,27 +1,77 @@
-# Banking App
+# Bank Of Java
 
-A mock banking application built to learn Spring Boot, MySQL, and Java application architecture.
+Bank Of Java is a class project built with JavaFX and MySQL. It simulates a simple banking application where users can create accounts, log in, manage balances, transfer money, view transaction history, and work with savings goals.
 
-## Features
-- User account creation
-- Login system
-- Random card number, CVC, and expiration generation
-- MySQL database storage
+## Built With
 
-## Tech Stack
-- Java
-- Spring Boot
+- Java 21
+- JavaFX
 - Maven
 - MySQL
 
+## Features
+
+- User signup and login
+- Dashboard with checking and savings balances
+- Recent account activity
+- View transaction history
+- Send money to other users
+- Request money from other users
+- Accept or deny money requests
+- Transfer money between checking and savings
+- Create savings goals
+- Add money to savings goals
+- Withdraw money from savings goals
+- Delete savings goals
+- Automatic return of saved goal money back to savings when a goal is deleted
+- Profile and settings page
+- Change full name
+- Change password
+- Update PIN
+- Regenerate card details
+- Delete account
+- Top navigation between screens
+- Placeholder `Card Sim` tab for a future feature
+
+## Main Screens
+
+- Login
+- Signup
+- Dashboard
+- View History & Transactions
+- Savings Goals
+- Pay & Transfer
+- Profile & Settings
+
+## Database Tables
+
+This project uses these main tables:
+
+- `users`
+- `transactions`
+- `requests`
+- `savings_goals`
+
 ## Project Structure
-- `model` for data classes
-- `service` for business logic
-- `config` for configuration
-- `util` for helper methods
-- `repository` for database access
 
-## Current Goal
-Build account creation and database connection first.
+- `ui`
+  Contains the JavaFX screens and navigation.
+- `service'
+  Contains the main app logic and most database operations.
+- `model`
+  Contains the data classes used in the project.
+- `config`
+  Contains the database connection file.
+- `util`
+  Contains helper code used by the app.
 
+## Running The Project
+
+1. Make sure MySQL is running.
+2. Make sure the `banking_app` database is created.
+3. Make sure `databaseConnection.java` matches your local database settings.
+4. Open the project in IntelliJ.
+5. Run the project with:
+
+```powershell
 .\mvnw.cmd javafx:run
