@@ -17,7 +17,6 @@ public class AppTopNav {
     public static final String TRANSACTIONS = "transactions";
     public static final String GOALS = "goals";
     public static final String TRANSFER = "transfer";
-    public static final String CARD_SIM = "card_sim";
 
     /*
      This makes the tab row
@@ -34,7 +33,6 @@ public class AppTopNav {
         Button transactionsButton = createTabButton("View History & Transactions", TRANSACTIONS.equals(activeTab));
         Button goalsButton = createTabButton("Savings Goals", GOALS.equals(activeTab));
         Button transferButton = createTabButton("Pay & Transfer", TRANSFER.equals(activeTab));
-        Button cardSimButton = createTabButton("Card Sim", CARD_SIM.equals(activeTab));
 
         dashboardButton.setOnAction(e -> onDashboard.run());
         transactionsButton.setOnAction(e -> onTransactions.run());
@@ -56,7 +54,6 @@ public class AppTopNav {
                 transactionsButton,
                 goalsButton,
                 transferButton,
-                cardSimButton,
                 spacer,
                 profileButton,
                 logoutButton
